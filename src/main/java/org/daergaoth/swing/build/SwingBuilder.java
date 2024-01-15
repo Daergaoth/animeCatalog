@@ -1,7 +1,8 @@
 package org.daergaoth.swing.build;
 
 import org.daergaoth.Main;
-import org.daergaoth.service.malAPI.MalService;
+import org.daergaoth.model.anime.Anime;
+import org.daergaoth.model.mal.MalApiResponse;
 import org.daergaoth.staticPackage.StaticObjects;
 import org.daergaoth.swing.elements.MyButton;
 import org.daergaoth.swing.elements.MyFrame;
@@ -12,6 +13,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -24,17 +26,15 @@ public class SwingBuilder {
 
     private static SwingBuilder instance = null;
 
-    private final Map<String, Object> swingElements;
+    private MyFrame frame;
 
-    //Only to speed up development
-    private String defaultKeyword = "";
+    private final Map<String, Object> swingElements;
     //Only to speed up development
     private String defaultRootFolder = "";
 
     private SwingBuilder() {
         swingElements = new HashMap<>();
         defaultRootFolder = System.getProperty("user.dir");
-        defaultKeyword = Main.class.getName();
     }
 
     public static SwingBuilder getInstance(){
@@ -44,44 +44,79 @@ public class SwingBuilder {
         return instance;
     }
 
+    public Map<String, Object> getSwingElements() {
+        return swingElements;
+    }
+
     public void build() {
         try {
-            MyFrame frame = new MyFrame();
-            swingSetup(frame);
+            if(Objects.isNull(frame)){
+                this.frame = new MyFrame();
+            }
+            swingSetupSearchFrame();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    private void swingSetup(MyFrame frame) {
-        buildButton(frame,StaticObjects.SEARCH_BUTTON_KEY,1215,600,100,30).addActionListener(e -> {
+    private void swingSetupSearchFrame() {
+        // Build Search Button
+        buildButton(StaticObjects.SEARCH_BUTTON_KEY,1215,600,100,30).addActionListener(e -> {
+            cleanFrame();
+            buildLogoIcon(StaticObjects.LOGO_IMAGE_KEY, 612, 20, 120, 120);
             ButtonMethodProvider provider = ButtonMethodProvider.getInstance();
-            provider.executeSearchButtonCommand(swingElements);
+            List<Anime> searchResult = provider.executeSearchButtonCommand(swingElements);
+            System.out.println();
+
         });
 
-        if(!StaticObjects.LOGOICON.isEmpty()){
-            buildLogoIcon(frame, StaticObjects.LOGO_IMAGE_KEY, 20, 20, 120, 120);
+        // Build Exit Button
+        buildButton(StaticObjects.EXIT_BUTTON_KEY,1215,50,100,30).addActionListener(e -> {
+            ButtonMethodProvider provider = ButtonMethodProvider.getInstance();
+//            cleanFrame();
+//            System.out.println("EXIT-ONE");
+            // Build Exit Button
+//            buildButton(StaticObjects.EXIT_BUTTON_KEY,1215,50,100,30).addActionListener(f -> {
+////                ButtonMethodProvider provider = ButtonMethodProvider.getInstance();
+//                cleanFrame();
+//                swingSetupSearchFrame();
+//                revalidateFrame();
+//                System.out.println("EXIT-TWO");
+//
+////            provider.executeExitButtonCommand();
+//            });
+            provider.executeExitButtonCommand();
+        });
+
+        // Build Logo Image
+        if(!StaticObjects.LOGO_ICON.isEmpty()){
+            buildLogoIcon(StaticObjects.LOGO_IMAGE_KEY, 20, 20, 120, 120);
         }
 
-        buildInputLabel(frame, StaticObjects.QUERY_LABEL_KEY, 200, 50, 200, 30);
-        buildUserInput(frame, StaticObjects.QUERY_INPUT_KEY, 400, 50, 800, 30,800, 30);
+        // Build Mal Client ID Input
+        buildInputLabel(StaticObjects.MAL_CLIENT_ID_LABEL_KEY, 200, 50, 200, 30);
+        buildUserInput(StaticObjects.MAL_CLIENT_ID_INPUT_KEY, StaticObjects.MAL_CLIENT_ID, 400, 50, 800, 30,800, 30);
 
-        startUp(frame);
+        // Build query Input
+        buildInputLabel(StaticObjects.QUERY_LABEL_KEY, 200, 100, 200, 30);
+        buildUserInput(StaticObjects.QUERY_INPUT_KEY, Main.class.getName(), 400, 100, 800, 30,800, 30);
+
+        // Start up frame
+        revalidateFrame();
     }
 
 
 
-    private MyButton buildButton(MyFrame frame, String key, int x, int y, int width, int height){
+    private MyButton buildButton(String key, int x, int y, int width, int height){
         MyButton myButtonOne = new MyButton();
         myButtonOne.setupDefaultButton(x, y, width, height, key);
-
         frame.add(myButtonOne);
         swingElements.put(key, myButtonOne);
-
         return myButtonOne;
+
     }
 
-    private void buildInputLabel(MyFrame frame, String key, int x, int y, int width, int height){
+    private void buildInputLabel(String key, int x, int y, int width, int height){
         MyLabel keywordLabelLabel = new MyLabel();
         keywordLabelLabel.setupTextField(x, y, width, height);
         keywordLabelLabel.setText(key + ":");
@@ -89,25 +124,25 @@ public class SwingBuilder {
         swingElements.put(key,keywordLabelLabel);
     }
 
-    private void buildUserInput(MyFrame frame, String key, int x, int y, int width, int height, int areaWidth, int areaHeight){
+    private void buildUserInput(String key, String placeholder, int x, int y, int width, int height, int areaWidth, int areaHeight){
 
         MyLabel keywordTextareaLabel = new MyLabel();
         keywordTextareaLabel.setupTextField(x, y, width, height);
         MyTextArea keywordTextArea = new MyTextArea();
         keywordTextArea.setupDefaultPanel();
         keywordTextArea.setSize(areaWidth, areaHeight);
-        if (!defaultKeyword.isEmpty()) {
-            keywordTextArea.setText(defaultKeyword);
+        if (!placeholder.isEmpty()) {
+            keywordTextArea.setText(placeholder);
         }
         keywordTextareaLabel.add(keywordTextArea);
         frame.add(keywordTextareaLabel);
         swingElements.put(key,keywordTextArea);
     }
 
-    private void buildLogoIcon(MyFrame frame, String key, int x, int y, int width, int height){
+    private void buildLogoIcon(String key, int x, int y, int width, int height){
         BufferedImage myPicture;
         try {
-            myPicture = ImageIO.read(new File(StaticObjects.LOGOICON));
+            myPicture = ImageIO.read(new File(StaticObjects.LOGO_ICON));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -123,7 +158,12 @@ public class SwingBuilder {
         }
     }
 
-    private void startUp(MyFrame frame){
+    private void cleanFrame(){
+        frame.getContentPane().removeAll();
+        frame.repaint();
+    }
+
+    private void revalidateFrame(){
         frame.setupDefaultFrame();
         frame.revalidate();
     }

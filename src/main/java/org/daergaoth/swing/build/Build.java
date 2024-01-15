@@ -82,10 +82,10 @@ public class Build {
             }
         });
 
-        if(StaticObjects.LOGOICON.length() > 0){
+        if(StaticObjects.LOGO_ICON.length() > 0){
             BufferedImage myPicture;
             try {
-                myPicture = ImageIO.read(new File(StaticObjects.LOGOICON));
+                myPicture = ImageIO.read(new File(StaticObjects.LOGO_ICON));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

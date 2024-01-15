@@ -28,7 +28,9 @@ public class URLBuilder {
                 }
                 stringBuilder.append(parameter.getKey());
                 stringBuilder.append("=");
-                stringBuilder.append(parameter.getValue().replaceAll(" ", "%20"));
+                stringBuilder.append(parameter.getValue()
+                        .replaceAll(" ", "%20")
+                );
                 counter++;
             }
         }
